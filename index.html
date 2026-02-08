@@ -1,163 +1,260 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>くじ引き</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ダブルチャンス LUCKY DRAW</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      min-height: 100vh;
-      background: radial-gradient(circle at top, #222, #000);
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+body {
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #222, #000);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow: hidden;
+}
 
-    .app {
-      width: 100%;
-      max-width: 360px;
-      background: #0a0a0a;
-      border-radius: 24px;
-      box-shadow: 0 0 40px rgba(255, 215, 0, 0.25);
-      overflow: hidden;
-    }
+/* フラッシュ */
+.flash {
+  position: fixed;
+  inset: 0;
+  background: white;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 999;
+  animation: flash 0.6s ease-out;
+}
 
-    .app-header {
-      padding: 24px;
-      text-align: center;
-      background: linear-gradient(135deg, #111, #000);
-      border-bottom: 1px solid #333;
-    }
+@keyframes flash {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
 
-    .app-title {
-      color: #ffd700;
-      font-size: 28px;
-      letter-spacing: 0.12em;
-    }
+/* アプリ枠 */
+.app {
+  width: 100%;
+  max-width: 360px;
+  background: #000;
+  border-radius: 24px;
+  box-shadow: 0 0 80px rgba(255,215,0,0.6);
+  overflow: hidden;
+  position: relative;
+}
 
-    .app-subtitle {
-      display: block;
-      margin-top: 6px;
-      font-size: 12px;
-      color: #aaa;
-    }
+.app-header {
+  text-align: center;
+  padding: 24px;
+  border-bottom: 1px solid #333;
+}
 
-    .app-main {
-      padding: 32px 24px;
-    }
+.app-title {
+  color: #ffd700;
+  letter-spacing: 0.2em;
+}
 
-    .result-frame {
-      background: #000;
-      border: 2px solid #ffd700;
-      border-radius: 16px;
-      padding: 28px;
-      text-align: center;
-      margin-bottom: 28px;
-    }
+.app-main {
+  padding: 28px;
+}
 
-    .result-text {
-      font-size: 32px;
-      font-weight: bold;
-      color: #ffd700;
-      letter-spacing: 0.15em;
-    }
+.result-frame {
+  position: relative;
+  background: #000;
+  border: 3px solid #ffd700;
+  border-radius: 18px;
+  padding: 34px;
+  text-align: center;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
 
-    .result-text.spinning {
-      animation: blink 0.15s infinite;
-    }
+/* 金色オーラ */
+.result-frame::after {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background: radial-gradient(circle, rgba(255,215,0,0.4), transparent 70%);
+  opacity: 0;
+}
 
-    @keyframes blink {
-      0% { opacity: 0.3; }
-      50% { opacity: 1; }
-      100% { opacity: 0.3; }
-    }
+.result-frame.hit::after { animation: aura 1.2s ease-out; }
 
-    .draw-button {
-      width: 100%;
-      padding: 16px;
-      font-size: 18px;
-      font-weight: bold;
-      color: #000;
-      background: linear-gradient(135deg, #ffd700, #ffb300);
-      border: none;
-      border-radius: 14px;
-      cursor: pointer;
-      box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
-      transition: transform 0.15s ease;
-    }
+@keyframes aura {
+  0% { transform: scale(0.2); opacity: 1; }
+  100% { transform: scale(1.2); opacity: 0; }
+}
 
-    .draw-button:active {
-      transform: scale(0.96);
-    }
+/* 結果テキスト */
+.result-text {
+  font-size: 34px;
+  font-weight: bold;
+  color: #ffd700;
+  letter-spacing: 0.25em;
+}
 
-    .draw-button:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-  </style>
+/* 抽選中（点滅） */
+.spinning {
+  animation: flicker 0.15s infinite;
+}
+
+@keyframes flicker {
+  0% { opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+
+/* HIT文字アニメ */
+.hit-text {
+  animation: hitZoom 1s cubic-bezier(.17,.89,.32,1.49);
+}
+
+@keyframes hitZoom {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.5); opacity: 1; }
+  80% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+/* キラキラ */
+.sparkle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: gold;
+  border-radius: 50%;
+  animation: sparkle 1s linear forwards;
+}
+
+@keyframes sparkle {
+  from { transform: translate(0,0) scale(1); opacity: 1; }
+  to { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; }
+}
+
+/* LOSE文字だけ灰色 */
+.result-frame.lose p {
+  color: #aaa; 
+}
+
+/* 抽選ボタン */
+.draw-button {
+  width: 100%;
+  padding: 16px;
+  font-size: 18px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #ffd700, #ffb300);
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.draw-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+</style>
 </head>
 
 <body>
-  <div class="app">
-    <header class="app-header">
-      <h1 class="app-title">LUCKY DRAW</h1>
-      <span class="app-subtitle">ONE CHANCE ONLY</span>
-    </header>
+<div class="app">
+  <header class="app-header">
+    <h1 class="app-title">ダブルチャンス</h1>
+  </header>
 
-    <main class="app-main">
-      <div class="lottery-box">
-        <div class="result-frame">
-          <p id="result" class="result-text">READY</p>
-        </div>
+  <main class="app-main">
+    <div class="result-frame" id="frame">
+      <p id="result" class="result-text">READY</p>
+    </div>
+    <button id="drawBtn" class="draw-button">START</button>
+  </main>
+</div>
 
-        <button id="drawBtn" class="draw-button">
-          抽選する
-        </button>
-      </div>
-    </main>
-  </div>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("drawBtn");
+  const result = document.getElementById("result");
+  const frame = document.getElementById("frame");
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const button = document.getElementById("drawBtn");
-      const result = document.getElementById("result");
+  const HIT_RATE = 20;       // 1/20でHIT
+  const INTERVAL = 60 * 1000; // 60秒間隔
+  const TIME_KEY = "lottery_time";
+  const SESSION_DONE = "session_lottery_done";
 
-      const HIT_RATE = 20; // 1 / 20
-      const STORAGE_KEY = "last_lottery_time";
-      const INTERVAL = 60 * 1000; // 1分
+  // 待機カウントダウン
+  function startCountdown(remainMs) {
+    btn.disabled = true;
+    const timer = setInterval(() => {
+      remainMs -= 1000;
+      const sec = Math.ceil(remainMs / 1000);
+      result.textContent = `WAIT ${sec}s`;
 
-      const now = Date.now();
-      const lastTime = localStorage.getItem(STORAGE_KEY);
+      if (remainMs <= 0) {
+        clearInterval(timer);
+        result.textContent = "READY";
+        btn.disabled = false;
+      }
+    }, 1000);
+  }
 
-      if (lastTime && now - Number(lastTime) < INTERVAL) {
-        const remain = Math.ceil((INTERVAL - (now - lastTime)) / 1000);
-        result.textContent = `WAIT ${remain}s`;
-        button.disabled = true;
-        return;
+  // ページロード時 WAIT判定
+  const lastTime = Number(localStorage.getItem(TIME_KEY));
+  if (lastTime && Date.now() - lastTime < INTERVAL) {
+    startCountdown(INTERVAL - (Date.now() - lastTime));
+  } else {
+    btn.disabled = false; // 念のため
+  }
+
+  // スパークル作成
+  function createSparkles() {
+    for (let i = 0; i < 25; i++) {
+      const s = document.createElement("div");
+      s.className = "sparkle";
+      s.style.left = "50%";
+      s.style.top = "50%";
+      s.style.setProperty("--x", `${(Math.random()-0.5)*300}px`);
+      s.style.setProperty("--y", `${(Math.random()-0.5)*300}px`);
+      frame.appendChild(s);
+      setTimeout(() => s.remove(), 1000);
+    }
+  }
+
+  btn.addEventListener("click", () => {
+    if (sessionStorage.getItem(SESSION_DONE)) return;
+    sessionStorage.setItem(SESSION_DONE, "1");
+
+    btn.disabled = true;
+    result.textContent = "DRAWING";
+    result.className = "result-text spinning";
+    frame.classList.remove("hit", "lose");
+
+    setTimeout(() => {
+      const win = Math.floor(Math.random() * HIT_RATE) === 0;
+
+      if (win) {
+        // HIT
+        const flash = document.createElement("div");
+        flash.className = "flash";
+        document.body.appendChild(flash);
+        setTimeout(() => flash.remove(), 600);
+
+        frame.classList.add("hit");
+        result.textContent = "あたり！！";
+        result.className = "result-text hit-text";
+
+        createSparkles();
+      } else {
+        // LOSE
+        frame.classList.add("lose");
+        result.textContent = "はずれ";
+        result.className = "result-text";
       }
 
-      button.addEventListener("click", () => {
-        button.disabled = true;
-        result.textContent = "DRAWING";
-        result.classList.add("spinning");
-
-        setTimeout(() => {
-          result.classList.remove("spinning");
-          const rand = Math.floor(Math.random() * HIT_RATE);
-          result.textContent = rand === 0 ? "HIT" : "LOSE";
-          result.style.color = rand === 0 ? "#ffd700" : "#666";
-          localStorage.setItem(STORAGE_KEY, Date.now().toString());
-        }, 1500);
-      });
-    });
-  </script>
+      localStorage.setItem(TIME_KEY, Date.now());
+    }, 1800);
+  });
+});
+</script>
 </body>
 </html>
